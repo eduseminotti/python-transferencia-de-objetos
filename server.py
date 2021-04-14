@@ -9,6 +9,25 @@ class Message(object):
         self.type = 'text'
 
 
+def broadcast(conn,message):
+    
+    for x in lista:
+        #verifico se conexão é diferente da conexão atual
+        if conn != x:
+            #aqui eu chamo o metodo para enviar serealizado
+            enviar_serealizado(x, message)
+
+
+def broadcast_update_users(conn,message):
+        
+    for x in lista:
+        #verifico se conexão é diferente da conexão atual
+    
+        #aqui eu chamo o metodo para enviar serealizado
+        enviar_serealizado(x, f'{message}', tipo='update_users')
+
+        
+                
 # lida com as mensagens recebidas do cliente ligado à essa thread
 def rodaThread(conn):
     
@@ -25,14 +44,11 @@ def rodaThread(conn):
                 if data.message == 'q':
                     #aqui puxo o metodo desconectar
                     removerConexao(conn)
+                    broadcast_update_users(conn, '>>>'.join(nomes))
                     break
 
                 #percorrer a lista
-                for x in lista:
-                    #verifico se conexão é diferente da conexão atual
-                    if conn != x:
-                        #aqui eu chamo o metodo para enviar serealizado
-                        enviar_serealizado(x, data.message)   
+                broadcast(conn, data.message) 
                 #se caso não for uma mensagem normal, ele cai nesse except para enviar o arquivo
             except:
                 try:
@@ -43,7 +59,11 @@ def rodaThread(conn):
         else:
             #aqui puxo o metodo para desconetar
             removerConexao(conn)
+            broadcast_update_users(conn, '>>>'.join(nomes)) 
+
             break
+
+
 
 # escutando para receber novas conexões
 def Main():
@@ -63,7 +83,11 @@ def Main():
         nome = data.message
         #aqui eu pego eu acrescento no final da lista. Nome na lista nomes e conexões na lista lista
         nomes.append(nome)
+        print(nome)
         lista.append(conn)
+        broadcast_update_users(conn, '>>>'.join(nomes)) 
+ 
+        
     
         threading.Thread(target=rodaThread, args=(conn,)).start()
 

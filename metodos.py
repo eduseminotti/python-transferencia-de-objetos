@@ -45,9 +45,12 @@ def pega_msg_serealizada(conn, data=None):
 
 # desconecta cliente e remove da lista
 def removerConexao(conn):
+    index = lista.index(conn)
+    nome = nomes[index]
     if conn in lista:
         conn.close()
         lista.remove(conn)
+        nomes.remove(nome)
 
 
 

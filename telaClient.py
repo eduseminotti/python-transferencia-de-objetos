@@ -2,51 +2,53 @@ from tkinter import *
 from tkinter import messagebox
 
 
-class TelaAplicacao(Frame):
+class TelaAplicacao():
 
     def __init__(self):
-        super().__init__()
+        self.root = Tk()
 
         self.callBackConectar = None
         self.callBackDesconectar = None
-        self.master.title("Exemplo Sockets TCP - Cliente")
-        self.pack(fill=BOTH, expand=True)
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.textMsgRecebida = Text(self, state = "disable")
+        self.callBackEnviar = None
+        self.callBackEnviar_arq = None
+        
+        self.root.title("Exemplo Sockets TCP - Cliente")
+        # self.root.pack(fill=BOTH, expand=True)
+        # self.root.columnconfigure(0, weight=1)
+        # self.root.rowconfigure(0, weight=1)
+        
+        self.textMsgRecebida = Text(self.root, state = "disable")
         self.textMsgRecebida.grid(row=0, column=0, columnspan=4, rowspan=1, padx=5, pady=5, sticky=E+W+S+N) 
-        self.lbConectados = Listbox(self)
-        self.lbConectados.insert(1, 'ze')
-        self.lbConectados.insert(2, 'maria')
-        self.lbConectados.insert(3, 'joão')
-        self.lbConectados.insert(4, 'abc Bolinhas')
+        
+        self.lbConectados = Listbox(self.root)
+
         self.lbConectados.grid(row=0, column=4, columnspan=1, rowspan=2, padx=5, pady=5, sticky=E+W+S+N)
         
-        self.lbMsg = Label(self, text="Mensagem")        
+        self.lbMsg = Label(self.root, text="Mensagem")        
         self.lbMsg.grid(row=2, column=0, columnspan=1, rowspan=1, padx=5, pady=5, sticky=E+W+S+N)
 
-        self.entryMsgEnviar = Entry(self)
+        self.entryMsgEnviar = Entry(self.root)
         self.entryMsgEnviar.grid(row=2, column=1, columnspan=3, rowspan=1, padx=5, pady=5, sticky=E+W+S+N)
 
-        self.lbSeuNome = Label(self, text="Seu Nome")        
+        self.lbSeuNome = Label(self.root, text="Seu Nome")        
         self.lbSeuNome.grid(row=3, column=0, columnspan=1, rowspan=1, padx=5, pady=5, sticky=E+W+S+N)
 
-        self.entrySeuNome = Entry(self)
+        self.entrySeuNome = Entry(self.root)
         self.entrySeuNome.grid(row=3, column=1, columnspan=3, rowspan=1, padx=5, pady=5, sticky=E+W+S+N)
         
-        self.buttonConectar = Button(self, text="Conectar")
+        self.buttonConectar = Button(self.root, text="Conectar")
         self.buttonConectar.grid(row=4, column=0, padx=5, pady=5 )
         self.buttonConectar["command"] = self.conectar
         
-        self.buttonDesconectar = Button(self, text="Desconectar")
+        self.buttonDesconectar = Button(self.root, text="Desconectar")
         self.buttonDesconectar.grid(row=4, column=1, padx=5, pady=5 )
         self.buttonDesconectar["command"] = self.desconectar
 
-        self.buttonEnviar = Button(self, text="Enviar")
+        self.buttonEnviar = Button(self.root, text="Enviar")
         self.buttonEnviar.grid(row=4, column=2, padx=5, pady=5 )
         self.buttonEnviar["command"] = self.enviarMensagem
 
-        self.buttonEnviarArquivo = Button(self, text="Arquivo")
+        self.buttonEnviarArquivo = Button(self.root, text="Arquivo")
         self.buttonEnviarArquivo.grid(row=4, column=3, padx=5, pady=5 )
         self.buttonEnviarArquivo["command"] = self.enviarArquivo
 
@@ -58,11 +60,8 @@ class TelaAplicacao(Frame):
         self.callBackDesconectar()        
     
     def enviarMensagem(self):
-        messagebox.showerror("Enviar Mensagem", "implemente as rotinas para enviar mensagem")
-        teste = self.entryMsgEnviar.get()
-        self.entryMsgEnviar.delete(0, END)
-        self.textMsgRecebida.insert(END, "\n"+teste)
-    
+        self.callBackEnviar()
+        
     def enviarArquivo(self):
-        messagebox.showwarning("Enviar Arquivo", "implemente as rotinas para enviar arquivo")
+        self.callBackEnviar_arq()
 
