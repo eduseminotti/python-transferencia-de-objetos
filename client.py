@@ -3,6 +3,7 @@ from tkinter import filedialog
 from tkinter import Tk
 from metodos import enviar_serealizado, pega_msg_serealizada, removerConexao
 from telaClient import *
+from model import Message
 
 telaAplicacao = TelaAplicacao()
 #root = Tk()
@@ -12,12 +13,8 @@ socketClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 obj_enviar = Message()
 
 nome = ''
+lista = []
 nomes = []
-class Message(object):
-    def __init__(self):
-        self.user = ''
-        self.message = ''
-        self.type = 'text'
 
 def conectar():
     global socketClient
@@ -37,11 +34,22 @@ def desconectar():
     
 def enviar_msg():
     message = telaAplicacao.entryMsgEnviar.get()
-    enviar_serealizado(socketClient, message)
+    enviar_serealizado(socketClient, message, destinatario= retornar_destinario())
     print('tomara que de certo')
 
+def retornar_destinario():
+    global nomes
+    selected = telaAplicacao.lbConectados.curselection()
+    if selected:
+        return nomes[selected[0]]
+    else:
+        return ''
+        
+    
 def enviar_arq():
     print('tomara que de certo')
+
+
     
 
 
@@ -52,13 +60,16 @@ telaAplicacao.callBackEnviar_arq = enviar_arq
 
 
 def _update_users_on_screen(message):
+    global nomes
     clientes = message.split('>>>')
     telaAplicacao.lbConectados.delete(0,END)
    #telaAplicacao.lbConectados.insert(0, 'Todos')
     i = 0
+    nomes = []
     for user in clientes:
         #if user != self.message.user:
         telaAplicacao.lbConectados.insert(i, user)
+        print(user)
         nomes.append(user)
         i = i + 1
     telaAplicacao.lbConectados.select_set(0)
