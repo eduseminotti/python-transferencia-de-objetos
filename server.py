@@ -1,4 +1,6 @@
-import threading, socket, pickle, logging
+import threading, socket, pickle, logging, os, time
+import os.path
+from os import path
 from metodos import enviar_serealizado, pega_msg_serealizada, reenviar_arquivo, removerConexao
 from model import Message
 from datetime import datetime
@@ -43,7 +45,6 @@ def retorna_destinatario(login):
     return ''
 
 
-
 def get_login_by_client(client):
     index = lista.index(client)
     return nomes[index]
@@ -65,6 +66,15 @@ def server_log( client, complement, login=''):
     logging.warning(text_to_log)
     update_message_area(text_to_log)
     print(text_to_log)
+    
+    
+def _update_users_on_screen():
+    global nomes
+    telaAplicacao.lbConectados.delete(0,END)
+    i = 0
+    for user in nomes:
+        telaAplicacao.lbConectados.insert(i, user)
+        i = i + 1
 
 
 def update_message_area(message):
@@ -91,9 +101,11 @@ def rodaThread(conn):
                 if data.message == 'q':
                     #aqui puxo o metodo desconectar
                     server_log(conn,'Saiu')
+                    _update_users_on_screen()
                     removerConexao(conn, lista, nomes)
                     
                     broadcast_update_users(conn, '>>>'.join(nomes))
+                    _update_users_on_screen()
                     break
 
                 #percorrer a lista
@@ -110,6 +122,7 @@ def rodaThread(conn):
         else:
             #aqui puxo o metodo para desconetar
             server_log(conn,'Saiu')
+            _update_users_on_screen()
             removerConexao(conn, lista, nomes)
             broadcast_update_users(conn, '>>>'.join(nomes)) 
 
@@ -137,8 +150,9 @@ def Receber():
         nome = data.message
         #aqui eu pego eu acrescento no final da lista. Nome na lista nomes e conexões na lista lista
         nomes.append(nome)
-        print(nome)
         lista.append(conn)
+        _update_users_on_screen()
+        
         broadcast_update_users(conn, '>>>'.join(nomes)) 
 
         server_log(conn,'Conectou')
@@ -146,6 +160,98 @@ def Receber():
     
         threading.Thread(target=rodaThread, args=(conn,)).start()
         
+
+
+#     '''
+#         RECEBE O ARQUIVO DO CLIENTE E SALVA NO SERVIDOR
+#     '''
+# def server_receive_save_file(self, client, message, threadId):
+
+#     the_recipient = None
+#     received_file_name = message # recebe o nome do arquivo enviado
+#     saved_file_name = f'{threadId}.jpg' # gera nome único para salvar o arquivo recebido
+
+#     # se não existir, cria o diretório onde será salvo os arquivos no servidor
+#     if not path.isdir('server_files'):
+#         try:
+#             os.mkdir('server_files', 777)
+#         except:
+#             pass
+
+#     # abre um arquio para salvar no servidor
+#     arq = open(f'server_files{os.path.sep}{saved_file_name}', 'wb')
+
+#     # inicia a escrita do novo arquivo
+#     cont = 0
+#     while message:
+#         if cont > 0:
+#             # na primeria iteração pula, pois é onde recebeu o nome do arquivo
+#             # ao receber a flag b'done' finaliza a escrita
+#             if cont == 1:
+#                 the_recipient = message.decode()
+#             elif message == b'done':
+#                 break
+#             else:
+#                 arq.write(message)
+#             message = client.recv(1024)
+#         else:
+#             # pulo a primeira msg (no do arquivo)
+#             message = client.recv(1024) 
+#         cont = cont + 1
+
+#     # fecha o arquivo 
+#     arq.close()
+#     time.sleep(.5)
+
+#     # após salvar o arquivo no servidor, notifica os destinatários
+#     # para que os mesmos setem onde querem salvar lá no ambiente deles
+#     # o cliente notificará após isso, para que o servidor possa prosseguir
+#     message = Message()
+#     if the_recipient != None and the_recipient != 'None':
+#         message.recipient = the_recipient
+#     message.command = 'REQUEST_PATH'
+#     message.message = f'{received_file_name.decode()}'
+#     message.user = self.get_login_by_client(client)
+#     self.broadcast(client, message)
+
+#     # salva globalmente o nome do arquivo enviado e o nome do arquivo salvo no servidor
+#     # essa informação será usada no próximo passo (ao enviar para os destinatários)
+#     self.the_file = [saved_file_name, received_file_name]
+
+#     # log envio de arquivo
+#     self.server_log(client, f'Arquivo: {received_file_name.decode()}', self.get_recipient(message))
+
+#     message.command = None
+#     message.recipient = None
+#     message.message = None
+#     message.user = None
+    
+
+# '''
+#     ENVIA O ARQUIVO RECÉM SALVO NO SERVIDOR PARA OS DESTINATÁRIOS
+# '''
+# def server_send_file_to_client(self, client):
+
+#     # envia o nome do arquivo enviado (pois o cliente salvará com o mesmo nome)
+#     client.send(self.the_file[1])
+#     time.sleep(.1)
+
+#     # abre o arquivo salvo no servidor, lê seu conteúdo e envio ao cliente
+#     arq2 = open(f'server_files{os.path.sep}{self.the_file[0]}', 'rb')
+#     data = arq2.read()
+#     client.send(data)
+#     time.sleep(.1)
+
+#     # envia a flag de done para o cliente, para que ele possa fechar o arquivo do seu lado
+#     client.send(b'done')
+#     time.sleep(.1)
+
+#     # fecha o arquivo que foi lido
+#     arq2.close()
+
+
+
+
 
 
 

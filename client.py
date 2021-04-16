@@ -1,9 +1,12 @@
-import socket, threading, pickle, time, uuid, sys
+import socket, threading, pickle, time, uuid, sys, os
+import os.path
+from os import path
 from tkinter import filedialog
 from tkinter import Tk
 from metodos import enviar_serealizado, pega_msg_serealizada, removerConexao
 from telaClient import *
 from model import Message
+
 
 telaAplicacao = TelaAplicacao()
 #root = Tk()
@@ -23,7 +26,6 @@ def conectar():
     obj_enviar.nome = nome
     enviar_serealizado(socketClient, nome)
     
-    
     threading.Thread(target=receber).start()
     #threading.Thread(target=enviar).start()
 
@@ -34,6 +36,8 @@ def desconectar():
     
 def enviar_msg():
     message = telaAplicacao.entryMsgEnviar.get()
+    nome = telaAplicacao.entrySeuNome.get()
+    message = f'{nome} >>> {message}'
     enviar_serealizado(socketClient, message, destinatario= retornar_destinario())
     print('tomara que de certo')
 
@@ -44,19 +48,102 @@ def retornar_destinario():
         return nomes[selected[0]]
     else:
         return ''
+    
+    
+    
+# def _send_file(message):
+#     global socketClient
+    
+#     telaAplicacao.root.destinatario()
+
+#     # solicita o arquivo
+#     file_path = filedialog.askopenfilename(initialdir = os.path.sep, title = 'Escolha um arquivo')
+
+#     if (file_path and file_path != None and file_path != ''):
+#         file_info  = file_path.split('/')
+#         file_name = file_info.pop()
+#         destinatario = 'None'
         
-    
-def enviar_arq():
-    print('tomara que de certo')
+#         # recupera o destinatário (se houver)
+#         if telaAplicacao.root.message.destinatario != None:
+#             destinatario = telaAplicacao.root.message.destinatario
+
+#         # envia o nome do arquivo selecionado
+#         telaAplicacao.root.socketClient.send(file_name.encode())
+#         time.sleep(.1)
+
+#         # envia o nome do destinatário (se houver)
+#         telaAplicacao.root.socketClient.send(destinatario.encode())
+#         time.sleep(.1)
+
+#         # envia o arquivo selecionado
+#         selected_file = open(file_path,'rb')
+#         data = selected_file.read()
+#         telaAplicacao.root.socketClient.send(data)
+#         time.sleep(.1)
+
+#         # envia flag sinalizando que arquivo foi todo enviado
+#         telaAplicacao.root.socketClient.send('done'.encode())
+#         time.sleep(.1)
+
+#         # fecha o arquivo
+#         selected_file.close()
 
 
-    
+'''
+    MÉTODO QUE ATUALIZA O DIRETSÓRIO ONDE O USUÁRIO SALVARÁ O ARQUIVO RECEBIDO
+    CHAMADO SEMPRE QUE ALGUÉM LHE ENVIAR UM ARQUIVO
+'''
+# def _send_file_path(self):
+#     # seleciona o diretório
+#     self.file_path = None
+#     self.file_path = filedialog.askdirectory()
+#     if (self.file_path and self.file_path != None and self.file_path != ''):
+
+#         # notifica ao servidor que o diretório onde salvar foi atualizado
+#         time.sleep(.1)
+#         self.message.command = 'SEND_PATH'
+#         send_serialized(self.client, self.message)
+#         self.message.command = None
+
+
+
+# def client_receive_save_file(self, data):
+
+#     # recupera o nome do arquivo enviado (o qual o servidor repassou)
+#     send_filename = data
+
+#     # cria um arquivo com diretório escolhido e mesmo nome do arquivo enviado
+#     save_as = f'{self.file_path}{os.path.sep}{send_filename.decode()}'
+#     arq = open(save_as, 'wb')
+
+#     cont = 0
+#     while data:
+
+#         if cont > 0:
+#             # se sinalizado como done e sai do loop
+#             if data == b'done':
+#                 arq.close()
+#                 break
+            
+#             # escreve o conteudo recebido no arquivo q está sendo salvo
+#             arq.write(data)
+#             data = self.client.recv(1024)
+#         else:
+#             # pula a primeira mensagem (onde foi recuperado nome do arquivo)
+#             data = self.client.recv(1024)
+#             cont = cont + 1
+
+#     # fecha o arquivo salvo
+#     arq.close()
+
+
 
 
 telaAplicacao.callBackConectar = conectar
 telaAplicacao.callBackDesconectar = desconectar
 telaAplicacao.callBackEnviar = enviar_msg
-telaAplicacao.callBackEnviar_arq = enviar_arq
+# telaAplicacao.callBackEnviar_arq = _send_file
 
 
 def _update_users_on_screen(message):
@@ -93,7 +180,7 @@ def receber():
                             telaAplicacao.textMsgRecebida.configure(state='disabled')                     
                             print(data.message)
                 except:
-                    receber_arquivo(socketClient, data)
+                    print('tomara que de certo')
             else:
                 socketClient.close()
                 break
@@ -101,92 +188,8 @@ def receber():
             socketClient.close()
             break
 
-# def enviar():
-#     while True:
-
-#         print('Digite f enviar arquivo')
-#         print('Ou apenas digite a sua mensagem')
-        
-#         x = input("")
-        
-#         if x == 'f':
-            
-#             root = Tk()
-#             root.deiconify()
-            
-#             #file_path = input('Informe qual o tipo de arquivo. Ex: nome.jpg*(preferencia esteja no mesmo diretorio) [*Disponiveis: png, gif, jpg e txt] ')
-#             file_path = filedialog.askopenfilename(initialdir = "/",title = "Escolha um arquivo",filetypes = (("jpeg files","*.jpg"),("png files","*.png*"),("gif files","*.gif"),("txt files","*.txt")))
-            
-#             #aqui chamamos o metodo pega_extencao, pq é necessario para podermos enviar o arquivo
-#             extension = pega_extencao(file_path)
-
-#             try:
-#                 arq = open(file_path,'rb')
-#                 #aqui chamamos o metodo para enviar serealizado// f'{nome}...... serve para concatenar as mensagens
-#                 enviar_serealizado(socketClient, f'{nome} enviou o arquivo: {file_path}')
-#                 time.sleep(.01)
-#                 socketClient.send(extension.encode('utf-8'))
-#                 time.sleep(.01)
-#                 data = arq.read()
-#                 socketClient.send(data)
-#                 time.sleep(.01)
-
-#                 #enviar arquivo
-#                 socketClient.send('ENVIADO'.encode('utf-8'))
-#                 arq.close()
-#             except:
-#                 print('Não deu certo, tente novamente.')
-            
-#         else:
-#             message = f'{nome}: {x}'
-#             enviar_serealizado(socketClient, message)
-
-# recebe o arquivo
-def receber_arquivo(conn, message):
-    unico = str(uuid.uuid4())
-
-    if (message == b"ERROR"):
-        message = conn.recv(1024)
-    else:
-        tipo_extencao = pega_extencao(message, 'binary')
-        filename = f'_{unico}{tipo_extencao}'
-        arq = open(filename,'wb')
-        cont = 0
-        while message:
-            cont = cont + 1
-            if cont > 1:
-                if (message == b"ENVIADO"):
-                    print(f'Arquivo salvo como: {filename}')
-                    arq.close()
-                    break
-                else:
-                    arq.write(message)
-                    message = conn.recv(1024)
-            else:
-                message = conn.recv(1024)
-        arq.close()
 
 
-# aqui vamos pegar a extensão do arquivo
-def pega_extencao(entrada_dados, entrada_tipo='filename'):
-
-    if entrada_tipo == 'filename':
-        if entrada_dados.endswith(('.png')):
-            return '.png'
-        if entrada_dados.endswith(('.gif')):
-            return '.gif'
-        if entrada_dados.endswith(('.jpg')):
-            return '.jpg'
-        
-    elif entrada_tipo == 'binary':
-        if entrada_dados == b".jpg":
-            return '.jpg'
-        if entrada_dados == b".gif":
-            return '.gif'
-        if entrada_dados == b".png":
-            return '.png'
-
-    return '.txt'
 
 def main():
     telaAplicacao.root.geometry("800x500")

@@ -44,6 +44,7 @@ def removerConexao(conn, lista, nomes):
         conn.close()
         lista.remove(conn)
         nomes.remove(nome)
+        
 
 
 
