@@ -9,7 +9,6 @@ from model import Message
 
 
 telaAplicacao = TelaAplicacao()
-#root = Tk()
 
 socketClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -18,6 +17,8 @@ obj_enviar = Message()
 nome = ''
 lista = []
 nomes = []
+file_path = None
+
 
 def conectar():
     global socketClient
@@ -49,101 +50,50 @@ def retornar_destinario():
     else:
         return ''
     
-    
-    
-# def _send_file(message):
-#     global socketClient
-    
-#     telaAplicacao.root.destinatario()
+def _send_file():
+    destinatario = retornar_destinario()
+    print(destinatario)
 
-#     # solicita o arquivo
-#     file_path = filedialog.askopenfilename(initialdir = os.path.sep, title = 'Escolha um arquivo')
+    # solicita o arquivo
+    file_path = filedialog.askopenfilename(initialdir = os.path.sep, title = 'Escolha um arquivo')
 
-#     if (file_path and file_path != None and file_path != ''):
-#         file_info  = file_path.split('/')
-#         file_name = file_info.pop()
-#         destinatario = 'None'
+    if (file_path and file_path != None and file_path != ''):
+        file_info  = file_path.split('/')
+        file_name = file_info.pop()
+        #destinatario = 'None'
         
-#         # recupera o destinatário (se houver)
-#         if telaAplicacao.root.message.destinatario != None:
-#             destinatario = telaAplicacao.root.message.destinatario
+        
 
-#         # envia o nome do arquivo selecionado
-#         telaAplicacao.root.socketClient.send(file_name.encode())
-#         time.sleep(.1)
+        # envia o nome do arquivo selecionado
+        socketClient.send(file_name.encode())
+        time.sleep(.1)
 
-#         # envia o nome do destinatário (se houver)
-#         telaAplicacao.root.socketClient.send(destinatario.encode())
-#         time.sleep(.1)
-
-#         # envia o arquivo selecionado
-#         selected_file = open(file_path,'rb')
-#         data = selected_file.read()
-#         telaAplicacao.root.socketClient.send(data)
-#         time.sleep(.1)
-
-#         # envia flag sinalizando que arquivo foi todo enviado
-#         telaAplicacao.root.socketClient.send('done'.encode())
-#         time.sleep(.1)
-
-#         # fecha o arquivo
-#         selected_file.close()
-
-
-'''
-    MÉTODO QUE ATUALIZA O DIRETSÓRIO ONDE O USUÁRIO SALVARÁ O ARQUIVO RECEBIDO
-    CHAMADO SEMPRE QUE ALGUÉM LHE ENVIAR UM ARQUIVO
-'''
-# def _send_file_path(self):
-#     # seleciona o diretório
-#     self.file_path = None
-#     self.file_path = filedialog.askdirectory()
-#     if (self.file_path and self.file_path != None and self.file_path != ''):
-
-#         # notifica ao servidor que o diretório onde salvar foi atualizado
-#         time.sleep(.1)
-#         self.message.command = 'SEND_PATH'
-#         send_serialized(self.client, self.message)
-#         self.message.command = None
-
-
-
-# def client_receive_save_file(self, data):
-
-#     # recupera o nome do arquivo enviado (o qual o servidor repassou)
-#     send_filename = data
-
-#     # cria um arquivo com diretório escolhido e mesmo nome do arquivo enviado
-#     save_as = f'{self.file_path}{os.path.sep}{send_filename.decode()}'
-#     arq = open(save_as, 'wb')
-
-#     cont = 0
-#     while data:
-
-#         if cont > 0:
-#             # se sinalizado como done e sai do loop
-#             if data == b'done':
-#                 arq.close()
-#                 break
+        # envia o nome do destinatário (se houver)
+        if destinatario == '':
+            destinatario = 'None'
             
-#             # escreve o conteudo recebido no arquivo q está sendo salvo
-#             arq.write(data)
-#             data = self.client.recv(1024)
-#         else:
-#             # pula a primeira mensagem (onde foi recuperado nome do arquivo)
-#             data = self.client.recv(1024)
-#             cont = cont + 1
+        socketClient.send(destinatario.encode())
+        time.sleep(.1)
 
-#     # fecha o arquivo salvo
-#     arq.close()
+        # envia o arquivo selecionado
+        selected_file = open(file_path,'rb')
+        data = selected_file.read()
+        socketClient.send(data)
+        time.sleep(.1)
 
+        # envia flag sinalizando que arquivo foi todo enviado
+        socketClient.send('done'.encode())
+        time.sleep(.1)
+
+        # fecha o arquivo
+        selected_file.close()
 
 
 
 telaAplicacao.callBackConectar = conectar
 telaAplicacao.callBackDesconectar = desconectar
 telaAplicacao.callBackEnviar = enviar_msg
-# telaAplicacao.callBackEnviar_arq = _send_file
+telaAplicacao.callBackEnviar_arq = _send_file
 
 
 def _update_users_on_screen(message):
@@ -160,6 +110,19 @@ def _update_users_on_screen(message):
         nomes.append(user)
         i = i + 1
     telaAplicacao.lbConectados.select_set(0)
+    
+    
+def _send_file_path():
+
+    # seleciona o diretório
+    global file_path
+    
+    file_path = filedialog.askdirectory()
+    if (file_path and file_path != None and file_path != ''):
+        # notifica ao servidor que o diretório onde salvar foi atualizado
+        time.sleep(.1)
+        enviar_serealizado(socketClient, '',comando='SEND_PATH')
+
 
 def receber():
     while True:
@@ -174,6 +137,13 @@ def receber():
                         if data.type == 'update_users':
                             _update_users_on_screen(data.message)
                             print(data.message)
+                            
+                        elif data.command == 'REQUEST_PATH':
+                            telaAplicacao.textMsgRecebida.configure(state='normal')
+                            telaAplicacao.textMsgRecebida.insert(INSERT, f'{data.user}: {data.message}\n')
+                            telaAplicacao.textMsgRecebida.configure(state='disabled')  
+                            _send_file_path()       
+
                         else:
                             telaAplicacao.textMsgRecebida.configure(state='normal')
                             telaAplicacao.textMsgRecebida.insert(INSERT, f'{data.message}\n')

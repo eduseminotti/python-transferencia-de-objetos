@@ -4,3 +4,4 @@ class Message(object):
         self.message = ''
         self.type = 'text'
         self.destinatario = ''
+        self.command = 'MESSAGE'

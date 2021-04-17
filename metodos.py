@@ -21,8 +21,11 @@ def reenviar_arquivo(conn, message, lista):
         
 
 # aqui pego os objetos e utilizo o picke para enviar serealizado
-def enviar_serealizado(conn, message, tipo='text', destinatario=''):
+def enviar_serealizado(conn, message, tipo='text', destinatario='', comando='MESSAGE', user=''):
+    
     obj_enviar = Message()
+    obj_enviar.user = user
+    obj_enviar.command = comando
     obj_enviar.message = message
     obj_enviar.type = tipo
     obj_enviar.destinatario = destinatario
